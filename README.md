@@ -4,6 +4,19 @@
 
 There are no dependencies, servers, or installation steps. Download the repository and open Garage Dashboard.html.
 
+## Screenshot
+
+![Garage Dashboard Screenshot](screenshot.png)
+
+## Features
+- 📖 Service manuals with filtering
+- 🖼️ Reference images for quick visual references
+- 🔧 Parts, supplies, and tools links
+- ⏱️ Persistent Job Timer plus as many labeled sub-timers as you need
+- 📝 Persistent Garage Notes
+- 🖼️ Static background for some personality
+- 🔗 775Drive right there at the bottom
+
 ## Service Manuals
 
 The dashboard does not include any service manuals, but offline manuals can be downloaded from the resources below.
@@ -18,15 +31,6 @@ To change the dashboard background, simply replace back.jpg with your own image 
 
 The links under Parts/Supplies/Tools, Tools & Hardware, and Reference Images can also be edited directly in Garage Dashboard.html to suit your garage.
 
-## Features
-- 📖 Service manuals with filtering
-- 🖼️ Reference images for quick visual references
-- 🔧 Parts, supplies, and tools links
-- ⏱️ Persistent Job Timer plus as many labeled sub-timers as you need
-- 📝 Persistent Garage Notes
-- 🖼️ Static background for some personality
-- 🔗 775Drive right there at the bottom
-
 ## Related resources
 
 ### Lemon Manuals
@@ -37,7 +41,3 @@ https://lemon-manuals.la/
 ## About
 
 Built for the garage by 775Drive.com
-
-## Screenshot
-
-![Garage Dashboard Screenshot](screenshot.png)
