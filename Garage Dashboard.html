@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>775Drive Garage Dashboard</title>
+	<link href='https://www.775drive.com/favicon.ico' rel='icon' type='image/x-icon'/>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+		body {
+			margin: 0;
+			padding: 40px;
+			background: #181818;
+			color: #e5e5e5;
+			font-family: Arial, Helvetica, sans-serif;
+		}
+		#timers {
+			position: fixed;
+			top: 20px;
+			right: 20px;
+			z-index: 10;
+
+			display: flex;
+			flex-direction: column;
+			align-items: stretch;
+			gap: 5px;
+		}
+		.timer {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+
+			padding: 6px 8px;
+			background: rgba(25, 25, 25, 0.85);
+			border: 1px solid #444;
+			border-radius: 6px;
+		}
+		.timer-label {
+			min-width: 75px;
+			color: #aaa;
+			font-size: 13px;
+			margin-right: 2px;
+			cursor: pointer;
+		}
+		.timer-label:hover {
+			color: #d47b32;
+		}
+		.timer-display {
+			min-width: 65px;
+			margin-right: 3px;
+
+			color: #d47b32;
+			font-family: monospace;
+			font-size: 16px;
+			font-weight: bold;
+			text-align: center;
+		}
+		.timer button,
+		#add-timer {
+			height: 26px;
+			padding: 0 8px;
+
+			background: #2b2b2b;
+			border: 1px solid #444;
+			border-radius: 4px;
+
+			color: #ccc;
+			font-size: 13px;
+			cursor: pointer;
+		}
+		.timer button {
+			width: 28px;
+			padding: 0;
+		}
+		.timer button:hover,
+		#add-timer:hover {
+			background: #333;
+			border-color: #d47b32;
+			color: #fff;
+		}
+		#add-timer {
+			align-self: flex-end;
+			padding: 0 10px;
+			color: #aaa;
+		}
+		.timer-dismiss {
+			width: 28px;
+			padding: 0;
+		}
+
+		.timer-dismiss:hover {
+			background: #4a2222 !important;
+			border-color: #a44 !important;
+		}
+		.background {
+			position: fixed;
+			inset: 0;
+			background-image: url("./back.jpg");
+			background-position: center;
+			background-size: cover;
+			background-repeat: no-repeat;
+			z-index: -2;
+		}
+		.overlay {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.50);
+			z-index: -1;
+		}
+		.main {
+			max-width: 95%;
+			margin: 0 auto;
+		}
+		header {
+			margin-bottom: 35px;
+			padding-bottom: 20px;
+			border-bottom: 2px solid #d47b32;
+		}
+		h1 {
+			margin: 0;
+			font-size: 32px;
+			color: #ffffff;
+		}
+		.subtitle {
+			margin-top: 8px;
+			color: #999;
+			font-size: 14px;
+		}
+		.sections {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+			gap: 25px;
+		}
+		section {
+			background: rgba(0,0,0,0.75);
+			border: 1px solid #333;
+			border-radius: 8px;
+			padding: 20px;
+			transition: border-color 0.15s;
+		}
+		section:hover {
+			border-color: #555;
+		}
+		.section-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 15px;
+			margin-bottom: 15px;
+		}
+		.section-header h2 {
+			margin: 0;
+			padding: 0;
+			border: none;
+		}
+		.collapsible details {
+			width: 100%;
+		}
+
+		.collapsible summary {
+			cursor: pointer;
+			color: #d47b32;
+			font-size: 20px;
+			font-weight: bold;
+			list-style: none;
+		}
+
+		.collapsible summary::-webkit-details-marker {
+			display: none;
+		}
+
+		.collapsible summary::before {
+			content: "▶";
+			display: inline-block;
+			margin-right: 8px;
+			font-size: 13px;
+			transition: transform 0.15s ease;
+		}
+
+		.collapsible details[open] summary::before {
+			transform: rotate(90deg);
+		}
+
+		.collapsible details[open] summary {
+			margin-bottom: 15px;
+		}
+		#manual-search {
+			width: 140px;
+			padding: 7px 10px;
+			background: #2b2b2b;
+			border: 1px solid #444;
+			border-radius: 5px;
+			color: #e5e5e5;
+			font-size: 13px;
+			outline: none;
+		}
+		#manual-search:focus {
+			border-color: #d47b32;
+		}
+		#manual-search::placeholder {
+			color: #777;
+		}
+		#manual-list {
+			max-height: 360px;
+			overflow-y: auto;
+			padding-right: 8px;
+		}
+		#manual-list::-webkit-scrollbar {
+			width: 8px;
+		}
+
+		#manual-list::-webkit-scrollbar-track {
+			background: #1b1b1b;
+			border-radius: 4px;
+		}
+
+		#manual-list::-webkit-scrollbar-thumb {
+			background: #555;
+			border-radius: 4px;
+		}
+
+		#manual-list::-webkit-scrollbar-thumb:hover {
+			background: #d47b32;
+		}
+		h2 {
+			margin-top: 0;
+			margin-bottom: 15px;
+			padding-bottom: 8px;
+			border-bottom: 1px solid #3a3a3a;
+			font-size: 20px;
+			color: #d47b32;
+		}
+		ul {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+		}
+		li {
+			margin-bottom: 8px;
+		}
+		a {
+			display: block;
+			padding: 10px 12px;
+			background: #2b2b2b;
+			border-left: 3px solid transparent;
+			border-radius: 5px;
+			color: #d7d7d7;
+			text-decoration: none;
+			transition:
+				background 0.15s,
+				color 0.15s,
+				border-color 0.15s;
+		}
+		a:hover {
+			background: #333;
+			border-left-color: #d47b32;
+			color: #ffffff;
+		}
+		#garage-notes {
+			width: 100%;
+			height: 360px;
+			resize: vertical;
+			padding: 10px;
+			background: rgba(20, 20, 20, 0.75);
+			border: 1px solid #444;
+			border-radius: 5px;
+			color: #e5e5e5;
+			font-family: Arial, Helvetica, sans-serif;
+			font-size: 14px;
+			line-height: 1.5;
+			outline: none;
+		}
+		#garage-notes:focus {
+			border-color: #d47b32;
+		}
+		#garage-notes::placeholder {
+			color: #777;
+		}
+		.notes-footer {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-top: 8px;
+		}
+		#notes-status {
+			color: #777;
+			font-size: 12px;
+		}
+		#clear-notes {
+			padding: 6px 10px;
+			background: #2b2b2b;
+			border: 1px solid #444;
+			border-radius: 5px;
+			color: #aaa;
+			cursor: pointer;
+		}
+		#clear-notes:hover {
+			background: #333;
+			border-color: #d47b32;
+			color: #fff;
+		}
+		.footnote {
+			max-width: 1100px;
+			margin: 35px auto 0;
+			padding-top: 20px;
+			border-top: 1px solid #444;
+			text-align: center;
+		}
+		.footnote a {
+			display: inline-block;
+			background: none;
+			border-left: none;
+			color: #999;
+		}
+		.footnote a:hover {
+			color: #d47b32;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="timers">
+		<button id="add-timer">+ Add Timer</button>
+	</div>
+	<div class="background"></div>
+	<div class="overlay"></div>
+    <div class="main">
+        <header>
+            <h1>775Drive Garage</h1>
+            <div class="subtitle">Service manuals, parts, tools, and useful links</div>
+        </header>
+        <div class="sections">
+            <section>
+				<div class="section-header">
+					<h2>Service Manuals</h2>
+					<input
+						type="text"
+						id="manual-search"
+						placeholder="Filter..."
+						autocomplete="off"
+					>
+				</div>
+                <ul id="manual-list">
+                    <li><a href="./Nugget_CHARM/index.html">1991 Isuzu Amigo 2.6L S (CHARM)</a></li>
+                    <li><a href="./Nugget_LEMON/index.html">1991 Isuzu Amigo 2.6L S (LEMON)</a></li>
+                    <li><a href="./TheMiata_CHARM/index.html">2003 Mazda Miata MX-5 Base (CHARM)</a></li>
+                    <li><a href="./TheMiata_LEMON/index.html">2003 Mazda Miata MX-5 Base (LEMON)</a></li>
+                    <li><a href="./VIP_CHARM/index.html">2013 Lexus GS350 RWD Base (CHARM)</a></li>
+                    <li><a href="./VIP_LEMON/index.html">2013 Lexus GS350 RWD Base (LEMON)</a></li>
+                </ul>
+            </section>
+			<section>
+				<h2>Reference Images</h2>
+				<ul>
+					<li><a href="./Tire%20Rotation%20Patterns.webp">Tire Rotation Patterns</a></li>
+					<li><a href="./Misfire%20Checklist.jpg">Misfire Checklist</a></li>
+					<li><a href="./Spark%20Plug%20Conditions.webp">Spark Plug Conditions</a></li>
+					<li><a href="./smoke%20indicators.jpg">Smoke Indicators</a></li>
+					<li><a href="./Penetrating%20Oils.jpg">Penetrating Oils</a></li>
+				</ul>
+			</section>
+            <section>
+                <h2>Parts/Supplies/Tools</h2>
+                <ul>
+                    <li><a href="https://www.oreillyauto.com/" target="_blank">O'Reilly Auto Parts</a></li>
+                    <li><a href="https://www.rockauto.com/" target="_blank">RockAuto</a></li>
+                    <li><a href="https://www.autozone.com/" target="_blank">AutoZone</a></li>
+                    <li><a href="https://www.napaonline.com/" target="_blank">NAPA</a></li>
+                    <li><a href="https://shop.advanceautoparts.com/" target="_blank">Advance Auto Parts</a></li>
+                </ul>
+            </section>
+            <section>
+                <h2>Tools &amp; Hardware</h2>
+                <ul>
+                    <li><a href="https://www.harborfreight.com/" target="_blank">Harbor Freight</a></li>
+					<li><a href="https://www.acehardware.com/" target="_blank">Ace Hardware</a></li>
+                    <li><a href="https://www.homedepot.com/" target="_blank">Home Depot</a></li>
+                    <li><a href="https://www.lowes.com/" target="_blank">Lowe's</a></li>
+                    <li><a href="https://www.amazon.com/" target="_blank">Amazon</a></li>
+                </ul>
+            </section>
+		</div>
+		<br />
+		<div class="sections">
+			<section class="collapsible">
+				<details>
+					<summary>Garage Notes</summary>
+
+					<textarea
+						id="garage-notes"
+						placeholder="Write something down..."
+						spellcheck="true"
+					></textarea>
+
+					<div class="notes-footer">
+						<span id="notes-status">Saved</span>
+						<button id="clear-notes">Clear</button>
+					</div>
+				</details>
+			</section>
+        </div>
+    </div>
+    <div class="footnote">
+        <a href="https://775drive.com" target="_blank">775Drive.com</a>
+    </div>
+	
+	<script>
+		const timersContainer = document.getElementById("timers");
+		const addTimerButton = document.getElementById("add-timer");
+
+		let timers = [];
+		let nextTimerId = 2;
+
+		function saveTimers() {
+			localStorage.setItem(
+				"775drive-garage-timers",
+				JSON.stringify(timers)
+			);
+		}
+
+		function formatTime(totalSeconds) {
+			const hours = Math.floor(totalSeconds / 3600);
+			const minutes = Math.floor(
+				(totalSeconds % 3600) / 60
+			);
+			const seconds = totalSeconds % 60;
+
+			return (
+				String(hours).padStart(2, "0") + ":" +
+				String(minutes).padStart(2, "0") + ":" +
+				String(seconds).padStart(2, "0")
+			);
+		}
+
+		function getElapsed(timer) {
+			if (!timer.running || !timer.startedAt) {
+				return timer.seconds;
+			}
+
+			return timer.seconds +
+				Math.floor(
+					(Date.now() - timer.startedAt) / 1000
+				);
+		}
+
+		function updateTimers() {
+			document
+				.querySelectorAll(".timer")
+				.forEach(function (element) {
+
+					const id =
+						Number(element.dataset.id);
+
+					const timer =
+						timers.find(function (t) {
+							return t.id === id;
+						});
+
+					if (!timer) {
+						return;
+					}
+
+					element.querySelector(
+						".timer-display"
+					).textContent =
+						formatTime(
+							getElapsed(timer)
+						);
+
+					const toggle =
+						element.querySelector(
+							".timer-toggle"
+						);
+
+					toggle.textContent =
+						timer.running ? "Ⅱ" : "▶";
+
+					toggle.title =
+						timer.running ? "Pause" : "Start";
+				});
+		}
+
+		function createTimerElement(timer) {
+			const element =
+				document.createElement("div");
+
+			element.className = "timer";
+			element.dataset.id = timer.id;
+
+			element.innerHTML = `
+				<span class="timer-label"
+					  title="${timer.id === 1
+						  ? "Job Timer"
+						  : "Click to rename"}">
+					${timer.label}
+				</span>
+
+				<span class="timer-display">
+					${formatTime(getElapsed(timer))}
+				</span>
+
+				<button
+					class="timer-toggle"
+					title="${timer.running
+						? "Pause"
+						: "Start"}">
+					${timer.running ? "Ⅱ" : "▶"}
+				</button>
+
+				<button
+					class="timer-reset"
+					title="Reset">
+					↺
+				</button>
+
+				${
+					timer.id !== 1
+						? `
+							<button
+								class="timer-dismiss"
+								title="Dismiss">
+								×
+							</button>
+						`
+						: ""
+				}
+			`;
+
+			const label =
+				element.querySelector(
+					".timer-label"
+				);
+
+			/*
+			 * Only sub-timers can be renamed.
+			 */
+			if (timer.id !== 1) {
+				label.addEventListener(
+					"click",
+					function () {
+						editTimerLabel(
+							timer,
+							label
+						);
+					}
+				);
+			} else {
+				label.style.cursor = "default";
+			}
+
+			/*
+			 * Start / Pause
+			 */
+			element
+				.querySelector(".timer-toggle")
+				.addEventListener(
+					"click",
+					function () {
+						toggleTimer(timer);
+					}
+				);
+
+			/*
+			 * Reset
+			 */
+			element
+				.querySelector(".timer-reset")
+				.addEventListener(
+					"click",
+					function () {
+						resetTimer(timer);
+					}
+				);
+
+			/*
+			 * Dismiss sub-timers.
+			 */
+			if (timer.id !== 1) {
+				element
+					.querySelector(
+						".timer-dismiss"
+					)
+					.addEventListener(
+						"click",
+						function () {
+							dismissTimer(timer);
+						}
+					);
+			}
+
+			timersContainer.insertBefore(
+				element,
+				addTimerButton
+			);
+		}
+
+		function editTimerLabel(timer, label) {
+			const input =
+				document.createElement("input");
+
+			input.type = "text";
+			input.value = timer.label;
+			input.maxLength = 30;
+
+			input.style.width = "110px";
+			input.style.padding = "3px 5px";
+			input.style.background = "#2b2b2b";
+			input.style.border = "1px solid #d47b32";
+			input.style.borderRadius = "4px";
+			input.style.color = "#e5e5e5";
+			input.style.fontSize = "13px";
+			input.style.outline = "none";
+
+			label.replaceWith(input);
+
+			input.focus();
+			input.select();
+
+			function finishEditing() {
+				const newLabel =
+					input.value.trim();
+
+				timer.label =
+					newLabel || "Timer";
+
+				label.textContent =
+					timer.label;
+
+				input.replaceWith(label);
+
+				saveTimers();
+			}
+
+			input.addEventListener(
+				"blur",
+				finishEditing
+			);
+
+			input.addEventListener(
+				"keydown",
+				function (event) {
+
+					if (event.key === "Enter") {
+						input.blur();
+					}
+
+					if (event.key === "Escape") {
+						input.value =
+							timer.label;
+
+						input.blur();
+					}
+				}
+			);
+		}
+
+		function toggleTimer(timer) {
+			if (timer.running) {
+				pauseTimer(timer);
+			} else {
+				startTimer(timer);
+			}
+		}
+
+		function startTimer(timer) {
+			if (timer.running) {
+				return;
+			}
+
+			timer.running = true;
+			timer.startedAt = Date.now();
+
+			saveTimers();
+			updateTimers();
+		}
+
+		function pauseTimer(timer) {
+			if (!timer.running) {
+				return;
+			}
+
+			timer.seconds =
+				getElapsed(timer);
+
+			timer.running = false;
+			timer.startedAt = null;
+
+			saveTimers();
+			updateTimers();
+		}
+
+		function resetTimer(timer) {
+			timer.seconds = 0;
+			timer.running = false;
+			timer.startedAt = null;
+
+			saveTimers();
+			updateTimers();
+		}
+
+		function dismissTimer(timer) {
+			/*
+			 * Job Timer cannot be dismissed.
+			 */
+			if (timer.id === 1) {
+				return;
+			}
+
+			/*
+			 * Preserve the elapsed time before
+			 * removing the timer.
+			 */
+			if (timer.running) {
+				pauseTimer(timer);
+			}
+
+			timers = timers.filter(
+				function (t) {
+					return t.id !== timer.id;
+				}
+			);
+
+			const element =
+				document.querySelector(
+					`.timer[data-id="${timer.id}"]`
+				);
+
+			if (element) {
+				element.remove();
+			}
+
+			saveTimers();
+		}
+
+		function addTimer() {
+			const timer = {
+				id: nextTimerId++,
+				label: "Timer",
+				seconds: 0,
+				running: false,
+				startedAt: null
+			};
+
+			timers.push(timer);
+
+			createTimerElement(timer);
+			saveTimers();
+		}
+
+		function loadTimers() {
+			const saved =
+				localStorage.getItem(
+					"775drive-garage-timers"
+				);
+
+			if (!saved) {
+
+				timers = [
+					{
+						id: 1,
+						label: "Job Timer",
+						seconds: 0,
+						running: false,
+						startedAt: null
+					}
+				];
+
+			} else {
+
+				try {
+					timers = JSON.parse(saved);
+
+					if (
+						!Array.isArray(timers) ||
+						timers.length === 0
+					) {
+						throw new Error(
+							"Invalid timer data"
+						);
+					}
+
+				} catch (error) {
+
+					console.error(
+						"Unable to restore timers:",
+						error
+					);
+
+					timers = [
+						{
+							id: 1,
+							label: "Job Timer",
+							seconds: 0,
+							running: false,
+							startedAt: null
+						}
+					];
+				}
+			}
+
+			/*
+			 * Make sure the primary timer always exists.
+			 */
+			let jobTimer =
+				timers.find(
+					function (timer) {
+						return timer.id === 1;
+					}
+				);
+
+			if (!jobTimer) {
+				jobTimer = {
+					id: 1,
+					label: "Job Timer",
+					seconds: 0,
+					running: false,
+					startedAt: null
+				};
+
+				timers.unshift(jobTimer);
+			}
+
+			/*
+			 * Job Timer's label is immutable.
+			 */
+			jobTimer.label = "Job Timer";
+
+			/*
+			 * Determine the next available ID.
+			 */
+			nextTimerId =
+				Math.max(
+					...timers.map(
+						function (timer) {
+							return timer.id;
+						}
+					)
+				) + 1;
+
+			/*
+			 * Rebuild the timer UI.
+			 */
+			timers.forEach(
+				createTimerElement
+			);
+
+			updateTimers();
+			saveTimers();
+		}
+
+		addTimerButton.addEventListener(
+			"click",
+			addTimer
+		);
+
+		/*
+		 * One update loop handles all timers.
+		 *
+		 * The actual elapsed time is calculated
+		 * using Date.now(), so this interval does
+		 * not determine timer accuracy.
+		 */
+		setInterval(
+			updateTimers,
+			250
+		);
+
+		loadTimers();
+	</script>
+	<script>
+		const manualSearch = document.getElementById("manual-search");
+		const manualSection = manualSearch.closest("section");
+		const manualItems = manualSection.querySelectorAll("li");
+
+		manualSearch.addEventListener("input", function () {
+			const searchTerms = this.value
+				.toLowerCase()
+				.trim()
+				.split(/\s+/)
+				.filter(Boolean);
+
+			manualItems.forEach(function (item) {
+				const text = item.textContent.toLowerCase();
+
+				const matches = searchTerms.every(function (term) {
+					return text.includes(term);
+				});
+
+				item.style.display = matches ? "" : "none";
+			});
+		});
+	</script>
+	<script>
+		const notes = document.getElementById("garage-notes");
+		const notesStatus = document.getElementById("notes-status");
+		const clearNotes = document.getElementById("clear-notes");
+
+		// Load saved notes
+		notes.value = localStorage.getItem("775drive-garage-notes") || "";
+
+		// Save notes whenever they change
+		notes.addEventListener("input", function () {
+			localStorage.setItem(
+				"775drive-garage-notes",
+				notes.value
+			);
+
+			notesStatus.textContent = "Saved";
+		});
+
+		// Clear notes
+		clearNotes.addEventListener("click", function () {
+			if (notes.value === "") {
+				return;
+			}
+
+			if (confirm("Clear all garage notes?")) {
+				notes.value = "";
+
+				localStorage.removeItem(
+					"775drive-garage-notes"
+				);
+
+				notesStatus.textContent = "Cleared";
+			}
+		});
+	</script>
+</body>
+</html>
