@@ -33,10 +33,15 @@ The links under Parts/Supplies/Tools, Tools & Hardware, and Reference Images can
 
 ## Related resources
 
-### Lemon Manuals
+### Manuals
 
 Offline automotive service manuals:
 https://lemon-manuals.la/
+
+### Self hosted vehicle history platform
+
+LubeLogger:
+https://github.com/hargata/lubelog
 
 ## About
 
